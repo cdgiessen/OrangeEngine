@@ -73,7 +73,9 @@ FetchContent_Declare(
     GIT_TAG        master
 )
 
-FetchContent_MakeAvailable(fc_glfw fc_vkbootstrap fc_vk_module fc_optional fc_expected fc_nlohmann_json fc_entt fc_moodycamelqueue fc_fastnoise2)
+FetchContent_MakeAvailable(fc_glfw fc_vk_module fc_vkbootstrap fc_optional fc_expected fc_nlohmann_json fc_entt fc_moodycamelqueue fc_fastnoise2)
+
+target_link_libraries( vk-bootstrap PUBLIC vulkan-simple-cpp)
 
 FetchContent_GetProperties(fc_imgui)
 if(NOT fc_imgui_POPULATED)
@@ -106,7 +108,7 @@ endif()
 
 add_library(external_dependencies INTERFACE)
 target_link_libraries(external_dependencies INTERFACE
-    glfw vk-bootstrap vulkan-simple-cpp DearImGui tl::optional tl::expected nlohmann_json::nlohmann_json cgltf EnTT::EnTT concurrentqueue FastNoise)
+    glfw vulkan-simple-cpp vk-bootstrap DearImGui tl::optional tl::expected nlohmann_json::nlohmann_json cgltf EnTT::EnTT concurrentqueue FastNoise)
 
 
 if (ORANGE_BUILD_TESTS)

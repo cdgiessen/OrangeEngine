@@ -1,0 +1,3 @@
+add_library(orange_math STATIC vector.cpp matrix.cpp)
+target_include_directories(orange_math PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+target_link_libraries(orange_math PRIVATE cmake_cpp_boilerplate_compiler_options)
