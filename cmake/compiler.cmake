@@ -60,6 +60,7 @@ if (ORANGE_ENABLE_PCH)
         <string>
         <optional>
         <variant>
+        <concepts>
         <limits>
         <unordered_map>
         <span>

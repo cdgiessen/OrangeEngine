@@ -18,14 +18,14 @@ FetchContent_Declare(
     GIT_TAG        3.3.2
 )
 FetchContent_Declare(
+        fc_vk_module
+        GIT_REPOSITORY https://github.com/cdgiessen/vk-module
+        GIT_TAG        master
+    )
+FetchContent_Declare(
     fc_vkbootstrap
     GIT_REPOSITORY https://github.com/charles-lunarg/vk-bootstrap
     GIT_TAG        swapchain
-)
-FetchContent_Declare(
-    fc_vk_module
-    GIT_REPOSITORY https://github.com/cdgiessen/vk-module
-    GIT_TAG        master
 )
 FetchContent_Declare(
     fc_imgui
@@ -73,7 +73,16 @@ FetchContent_Declare(
     GIT_TAG        master
 )
 
-FetchContent_MakeAvailable(fc_glfw fc_vk_module fc_vkbootstrap fc_optional fc_expected fc_nlohmann_json fc_entt fc_moodycamelqueue fc_fastnoise2)
+FetchContent_MakeAvailable(
+fc_glfw
+fc_vk_module
+fc_vkbootstrap
+fc_optional fc_expected
+fc_nlohmann_json
+fc_entt
+fc_moodycamelqueue
+fc_fastnoise2
+)
 
 target_link_libraries( vk-bootstrap PUBLIC vulkan-simple-cpp)
 
@@ -108,19 +117,29 @@ endif()
 
 add_library(external_dependencies INTERFACE)
 target_link_libraries(external_dependencies INTERFACE
-    glfw vulkan-simple-cpp vk-bootstrap DearImGui tl::optional tl::expected nlohmann_json::nlohmann_json cgltf EnTT::EnTT concurrentqueue FastNoise)
+    glfw
+    vulkan-simple-cpp
+    vk-bootstrap
+    DearImGui
+    tl::optional tl::expected
+    nlohmann_json::nlohmann_json
+    cgltf
+    EnTT::EnTT
+    concurrentqueue
+    FastNoise
+    )
 
 
-if (ORANGE_BUILD_TESTS)
+if (ORANGE_ENGINE_BUILD_TESTS)
 option(CATCH_BUILD_TESTING OFF)
 option(CATCH_ENABLE_WERROR OFF)
 option(CATCH_INSTALL_DOCS OFF)
-option(CATCH_INSTALL_HELPERS OFF)
+option(CATCH_INSTALL_HELPERS ON)
 set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1) #remove Catch2 target spam
 FetchContent_Declare(
     Catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2
-    GIT_TAG        v2.12.2
+    GIT_TAG        v3.0.0-preview3
 )
 FetchContent_MakeAvailable(Catch2)
 endif()

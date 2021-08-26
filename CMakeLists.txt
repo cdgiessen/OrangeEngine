@@ -10,11 +10,12 @@ include("cmake/compiler.cmake")
 
 add_subdirectory(ext)
 
+option(ORANGE_ENGINE_BUILD_TESTS "Build tests" ON)
+
 add_library(project_dependencies INTERFACE)
 target_link_libraries(project_dependencies INTERFACE external_dependencies)
 add_subdirectory(src)
 
-option(ORANGE_BUILD_TESTS "Build tests" ON)
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND ORANGE_BUILD_TESTS)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND ORANGE_ENGINE_BUILD_TESTS)
     add_subdirectory(test)
 endif()
