@@ -72,6 +72,11 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/Auburn/FastNoise2/
     GIT_TAG        master
 )
+FetchContent_Declare(
+    fc_spdlog
+    GIT_REPOSITORY https://github.com/gabime/spdlog
+    GIT_TAG        v1.x
+)
 
 FetchContent_MakeAvailable(
 fc_glfw
@@ -82,6 +87,7 @@ fc_nlohmann_json
 fc_entt
 fc_moodycamelqueue
 fc_fastnoise2
+fc_spdlog
 )
 
 target_link_libraries( vk-bootstrap PUBLIC vulkan-simple-cpp)
@@ -127,6 +133,7 @@ target_link_libraries(external_dependencies INTERFACE
     EnTT::EnTT
     concurrentqueue
     FastNoise
+    spdlog::spdlog
     )
 
 
