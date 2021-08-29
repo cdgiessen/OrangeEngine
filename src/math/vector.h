@@ -23,6 +23,79 @@ namespace math
         constexpr bool operator==(vec<T, L> const& right) const = default;
     };
 
+    template <typename T> struct vec<T, 2>
+    {
+        T x{}, y{};
+        constexpr vec() noexcept = default;
+        constexpr vec(T x, T y) noexcept : x(x), y(y) {}
+        constexpr size_t size() const noexcept { return 2; };
+
+        constexpr T const& operator[](size_t index) const noexcept
+        {
+            if (index == 0) return x;
+            if (index == 1) return y;
+            return x;
+        }
+        constexpr T& operator[](size_t index) noexcept
+        {
+            if (index == 0) return x;
+            if (index == 1) return y;
+            return x;
+        }
+
+        constexpr bool operator==(vec<T, 2> const& right) const = default;
+    };
+    template <typename T> struct vec<T, 3>
+    {
+        T x{}, y{}, z{};
+        constexpr vec() noexcept = default;
+        constexpr vec(T x, T y, T z) noexcept : x(x), y(y), z(z) {}
+        constexpr size_t size() const noexcept { return 3; };
+
+        constexpr T const& operator[](size_t index) const noexcept
+        {
+            if (index == 0) return x;
+            if (index == 1) return y;
+            if (index == 2) return z;
+            return x;
+        }
+        constexpr T& operator[](size_t index) noexcept
+        {
+            if (index == 0) return x;
+            if (index == 1) return y;
+            if (index == 2) return z;
+            return x;
+        }
+
+        constexpr bool operator==(vec<T, 3> const& right) const = default;
+    };
+    template <typename T> struct vec<T, 4>
+    {
+        T x{}, y{}, z{}, w{};
+        constexpr vec() noexcept = default;
+        constexpr vec(T x, T y, T z, T w) noexcept : x(x), y(y), z(z), w(w) {}
+        constexpr size_t size() const noexcept { return 4; };
+
+        constexpr T const& operator[](size_t index) const noexcept
+        {
+            if (index == 0) return x;
+            if (index == 1) return y;
+            if (index == 2) return z;
+            if (index == 3) return w;
+            return x;
+        }
+        constexpr T& operator[](size_t index) noexcept
+        {
+            if (index == 0) return x;
+            if (index == 1) return y;
+            if (index == 2) return z;
+            if (index == 3) return w;
+            return x;
+        }
+
+        constexpr bool operator==(vec<T, 4> const& right) const = default;
+    };
+
     // -vec -> vec (memberwise)
     template <arithmetic T, size_t L> constexpr auto operator-(vec<T, L> const& right) noexcept
     {
@@ -392,6 +465,10 @@ namespace math
     using vec2 = vec<float, 2>;
     using vec3 = vec<float, 3>;
     using vec4 = vec<float, 4>;
+
+    using vec2d = vec<double, 2>;
+    using vec3d = vec<double, 3>;
+    using vec4d = vec<double, 4>;
 
     using vec2i = vec<int32_t, 2>;
     using vec3i = vec<int32_t, 3>;

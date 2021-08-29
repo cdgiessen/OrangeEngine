@@ -26,11 +26,11 @@ TEST_CASE("Vector construction", "[math]")
     }
     SECTION("Value initialization")
     {
-        math::vec4 a(2.f, 3.f);
+        math::vec2 a(2.f, 3.f);
         REQUIRE(a[0] == 2.f);
         REQUIRE(a[1] == 3.f);
 
-        math::vec4 b{ 2.f, 3.f, 5.f };
+        math::vec3 b{ 2.f, 3.f, 5.f };
         REQUIRE(b[0] == 2.f);
         REQUIRE(b[1] == 3.f);
         REQUIRE(b[2] == 5.f);
