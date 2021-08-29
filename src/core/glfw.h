@@ -2,7 +2,7 @@
 
 #include "math/vector.h"
 
-typedef struct GLFWwindow_T* GLFWwindow;
+typedef struct GLFWwindow GLFWwindow;
 
 namespace Input
 {
@@ -132,61 +132,90 @@ enum class KeyCode
     RIGHT_SUPER = 347,
     MENU = 348,
 };
-
+}; // namespace Input
 class Window
 {
     public:
+    // Call at app startup and before shutdown
+    static void static_initialization() noexcept;
+    static void static_shutdown() noexcept;
+    static bool is_static_initialized;
+
     enum class InitialMode
     {
         windowed,
         fullscreen
     };
+    enum class MouseControl
+    {
+        normal,
+        disabled,
+        hidden
+    };
+    struct CreateDetails
+    {
+        InitialMode initial_mode = InitialMode::windowed;
+        MouseControl mouse_mode = MouseControl::normal;
+        const char* window_title = "";
+        math::vec2i size = math::vec2i{ 200, 200 };
+        math::vec2i position = math::vec2i{ 0, 0 };
+    };
 
-    Window(InitialMode initial_mode const char* window_title, const vec2i& size, const vec2i& position);
+    Window(CreateDetails create_details) noexcept;
+    ~Window() noexcept;
+    Window(Window const&) = delete;
+    Window& operator=(Window const&) = delete;
+    Window(Window&& other) noexcept;
+    Window& operator=(Window&& other) noexcept;
 
-    bool get_key(KeyCode code) const;
-    bool get_key_down(KeyCode code) const;
-    bool get_key_up(KeyCode code) const;
+    void show_window(bool show = true);
+    void set_size_limits(math::vec2i min_size, math::vec2i max_size);
+
+    GLFWwindow* handle() const;
+    bool should_window_resize() const;
+    void set_resize_done();
+    bool should_close() const;
+    void set_close();
+
+    bool is_iconified() const;
+    bool is_focused() const;
+
+    math::vec2i get_window_size() const;
+
+    bool get_key(Input::KeyCode code) const;
+    bool get_key_down(Input::KeyCode code) const;
+    bool get_key_up(Input::KeyCode code) const;
 
     bool get_mouse_button(int button) const;
     bool get_mouse_button_pressed(int button) const;
     bool get_mouse_button_released(int button) const;
-    math::vec2 get_mouse_position() const;
-    math::vec2 get_mouse_change_in_position() const;
-    float get_mouse_scroll_x() const;
-    float get_mouse_scroll_y() const;
+
+    math::vec2d get_mouse_position() const;
+    math::vec2d get_mouse_change_in_position() const;
+
+    math::vec2d get_mouse_scroll() const;
+    double get_mouse_scroll_x() const;
+    double get_mouse_scroll_y() const;
 
     void set_text_input_mode();
     void reset_text_input_mode();
     bool get_text_input_mode() const;
 
-    bool get_mouse_control_status() const;
-    void set_mouse_control_status(bool value);
+    MouseControl get_mouse_control_status() const;
+    void set_mouse_control_status(MouseControl value);
 
-    void key_event(int key, int scancode, int action, int mods);
-    void mouse_button_event(int button, int action, int mods);
-    void mouse_move_event(float xoffset, float yoffset);
-    void mouse_scroll_event(float xoffset, float yoffset);
-
-    static void connect_joystick(int index);
-    static void disconnect_joystick(int index);
-
-    static bool is_joystick_connected(int index);
-
-    static float get_controller_joysticks(int id, int axis);
-    static bool get_controller_button(int id, int button);
-
+    void poll_events();
     void reset_released_input();
-    void update_inputs();
 
     void next_frame();
 
     private:
-    GLFWwindow window;
-
-    static const int KeyboardButtonCount = 512;
-    static const int MouseButtonCount = 15;
-    static const int JoystickCount = 16;
+    static const uint32_t KeyboardButtonCount = 512;
+    static const uint32_t MouseButtonCount = 15;
+    static const uint32_t JoystickCount = 16;
+    static const uint32_t JoystickAxisCount = 4;
+    static const uint32_t JoystickButtonCount = 16;
+    static const uint32_t TotalFrameCount = 2;
 
     enum class ButtonState
     {
@@ -196,32 +225,48 @@ class Window
         up
     };
 
-    // contains joystick info, such as if it's connected, how many axes and buttons there are, and pointers to the data of the axes and buttons
-    struct Joystick
-    {
-        int joystickIndex = -1; // which joystick it is;
-
-        bool connected = false;
-        int axesCount = 0;           // how many input axes there are
-        const float* axes = nullptr; // glfw managed pointer to array of axes, range from -1.0 to 1.0
-        int buttonCount = 0;         // how many buttons there are
-        const unsigned char* buttons =
-            nullptr; // glfw managed pointer to array of chars which are either true or false
-    };
     struct InputFrame
     {
         ButtonState keyboard_buttons[MouseButtonCount] = { { ButtonState::none } };
-        ButtonState mouse_button[MouseButtonCount] = { { ButtonState::none } };
+        ButtonState mouse_buttons[MouseButtonCount] = { { ButtonState::none } };
 
-        bool textInputMode = false;
-        bool mouseControlStatus = false;
-        math::vec2 mouse_position = math::vec2{ 0.0f, 0.0f };
-        math::vec2 mouse_positionPrevious = math::vec2{ 0.0f, 0.0f };
-        math::vec2 mouse_changeInPosition = math::vec2{ 0.0f, 0.0f };
-        math::vec2 mouse_scroll = math::vec2{ 0.0f, 0.0f };
-
-        Joystick joystickData[JoystickCount] = {};
+        bool test_input_mode = false;
+        MouseControl mouse_control_status = MouseControl::normal;
+        math::vec2d mouse_position{};
+        math::vec2d mouse_position_previous{};
+        math::vec2d mouse_change_in_position{};
+        math::vec2d mouse_scroll{};
     };
-};
+    void key_event(int key, int scancode, int action, int mods);
+    void mouse_button_event(int button, int action, int mods);
+    void mouse_move_event(double xoffset, double yoffset);
+    void mouse_scroll_event(double xoffset, double yoffset);
 
-}; // namespace Input
+    static void error_handler(int error, const char* description);
+    static void keyboard_handler(GLFWwindow* window, int key, int scancode, int action, int mods);
+    static void char_input_handler(GLFWwindow* window, uint32_t codePoint);
+    static void mouse_button_handler(GLFWwindow* window, int button, int action, int mods);
+    static void mouse_move_handler(GLFWwindow* window, double posx, double posy);
+    static void mouse_scroll_handler(GLFWwindow* window, double xoffset, double yoffset);
+    static void framebuffer_size_handler(GLFWwindow* window, int width, int height);
+    static void window_resize_handler(GLFWwindow* window, int width, int height);
+    static void window_focus_handler(GLFWwindow* window, int focused);
+    static void window_iconify_handler(GLFWwindow* window, int iconified);
+    static void window_close_handler(GLFWwindow* window);
+
+    InputFrame& frame();
+    InputFrame const& frame() const;
+
+    GLFWwindow* window;
+    struct State
+    {
+        math::vec2i current_window_size;
+        bool update_window_size = false;
+        bool should_close_window = false;
+        bool _is_iconified = false;
+        bool _is_focused = false;
+
+        uint32_t current_frame = 0;
+        InputFrame _frame[TotalFrameCount];
+    } state;
+};

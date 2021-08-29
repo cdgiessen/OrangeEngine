@@ -1,3 +1,3 @@
 add_library(orange_core STATIC engine.cpp glfw.cpp)
 target_include_directories(orange_core PRIVATE ${CMAKE_CURRENT_LIST_DIR} PUBLIC ${ORANGE_ENGINE_SOURCE_BASE_DIR})
-target_link_libraries(orange_core PRIVATE cmake_cpp_boilerplate_compiler_options)
+target_link_libraries(orange_core PRIVATE cmake_cpp_boilerplate_compiler_options external_dependencies)
