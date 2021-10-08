@@ -330,15 +330,15 @@ TEST_CASE("Vector functions", "[math]")
     {
         REQUIRE(math::saturate(math::vec3{ 2.f, -2.f, -0.5f }) == math::vec3{ 1.f, 0.f, 0.f });
     }
-    SECTION("minComponent")
+    SECTION("min_component")
     {
-        REQUIRE(math::minComponent(math::vec2i{ 5, 2 }) == 2);
-        REQUIRE(math::minComponent(math::vec3{ 2.f, 5.f, -0.5f }) == -0.5f);
+        REQUIRE(math::min_component(math::vec2i{ 5, 2 }) == 2);
+        REQUIRE(math::min_component(math::vec3{ 2.f, 5.f, -0.5f }) == -0.5f);
     }
-    SECTION("maxComponent")
+    SECTION("max_component")
     {
-        REQUIRE(math::maxComponent(math::vec2i{ 2, -3 }) == 2);
-        REQUIRE(math::maxComponent(math::vec3{ 2.f, -2.f, -0.5f }) == 2.f);
+        REQUIRE(math::max_component(math::vec2i{ 2, -3 }) == 2);
+        REQUIRE(math::max_component(math::vec3{ 2.f, -2.f, -0.5f }) == 2.f);
     }
     SECTION("all")
     {

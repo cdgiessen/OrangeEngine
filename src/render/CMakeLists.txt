@@ -1,0 +1,3 @@
+add_library(orange_renderer STATIC renderer.cpp)
+target_include_directories(orange_renderer PRIVATE ${CMAKE_CURRENT_LIST_DIR} PUBLIC ${ORANGE_ENGINE_SOURCE_BASE_DIR})
+target_link_libraries(orange_renderer PRIVATE cmake_cpp_boilerplate_compiler_options external_dependencies)

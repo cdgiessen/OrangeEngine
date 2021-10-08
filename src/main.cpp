@@ -1,4 +1,5 @@
 #include "core/glfw.h"
+#include "spdlog/spdlog.h"
 
 struct StaticInit
 {
@@ -14,11 +15,14 @@ int main()
 
     while (!main_win.should_close())
     {
-        main_win.poll_events();
+        Window::poll_events();
 
         if (main_win.get_key(Input::KeyCode::ESCAPE))
         {
             main_win.set_close();
         }
+
+
+        main_win.next_frame();
     }
 }

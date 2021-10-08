@@ -20,6 +20,13 @@ void Window::static_shutdown() noexcept
 }
 bool Window::is_static_initialized = false;
 
+void Window::poll_events()
+{
+    assert(is_static_initialized == true);
+    glfwPollEvents();
+}
+
+
 template <typename Enumeration>
 auto as_integer(Enumeration const value) -> typename std::underlying_type<Enumeration>::type
 {
@@ -105,7 +112,9 @@ Window& Window::operator=(Window&& other) noexcept
     return *this;
 }
 
-void Window::show_window(bool show)
+GLFWwindow* Window::handle() const { return window; }
+
+void Window::show(bool show)
 {
     if (show)
     {
@@ -126,15 +135,16 @@ void Window::set_size_limits(math::vec2i min_size, math::vec2i max_size)
         max_size.y ? max_size.y : min_size.y);
 }
 
-GLFWwindow* Window::handle() const { return window; }
+math::vec2i Window::get_window_size() const
+{
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    return math::vec2i(width, height);
+}
 
-bool Window::should_window_resize() const { return state.update_window_size; }
+bool Window::should_resize() const { return state.update_window_size; }
 
-void Window::set_resize_done() { state.update_window_size = false; }
-
-bool Window::is_iconified() const { return state._is_iconified; }
-
-bool Window::is_focused() const { return state._is_focused; }
+void Window::finish_resize() { state.update_window_size = false; }
 
 bool Window::should_close() const { return state.should_close_window; }
 
@@ -144,41 +154,44 @@ void Window::set_close()
     glfwSetWindowShouldClose(window, true);
 }
 
-math::vec2i Window::get_window_size() const
-{
-    int width, height;
-    glfwGetWindowSize(window, &width, &height);
-    return math::vec2i(width, height);
-}
+bool Window::is_iconified() const { return state._is_iconified; }
+
+bool Window::is_focused() const { return state._is_focused; }
 
 bool Window::get_key(Input::KeyCode code) const
 {
     auto button_state = frame().keyboard_buttons[as_integer(code)];
-    return button_state == ButtonState::down || button_state == ButtonState::held;
+    return button_state == Input::ButtonState::down || button_state == Input::ButtonState::held ||
+           button_state == Input::ButtonState::repeat;
 }
 
 bool Window::get_key_down(Input::KeyCode code) const
 {
-    return frame().keyboard_buttons[as_integer(code)] == ButtonState::down;
+    return frame().keyboard_buttons[as_integer(code)] == Input::ButtonState::down;
 }
 
 bool Window::get_key_up(Input::KeyCode code) const
 {
-    return frame().keyboard_buttons[as_integer(code)] == ButtonState::up;
+    return frame().keyboard_buttons[as_integer(code)] == Input::ButtonState::up;
+}
+
+bool Window::get_key_repeat(Input::KeyCode code) const
+{
+    return frame().keyboard_buttons[as_integer(code)] == Input::ButtonState::repeat;
 }
 
 bool Window::get_mouse_button(int button) const
 {
     auto button_state = frame().mouse_buttons[button];
-    return button_state == ButtonState::down || button_state == ButtonState::held;
+    return button_state == Input::ButtonState::down || button_state == Input::ButtonState::held;
 }
 bool Window::get_mouse_button_pressed(int button) const
 {
-    return frame().mouse_buttons[button] == ButtonState::down;
+    return frame().mouse_buttons[button] == Input::ButtonState::down;
 }
 bool Window::get_mouse_button_released(int button) const
 {
-    return frame().mouse_buttons[button] == ButtonState::up;
+    return frame().mouse_buttons[button] == Input::ButtonState::up;
 }
 math::vec2d Window::get_mouse_position() const { return frame().mouse_position; }
 math::vec2d Window::get_mouse_change_in_position() const
@@ -186,8 +199,6 @@ math::vec2d Window::get_mouse_change_in_position() const
     return frame().mouse_change_in_position;
 }
 math::vec2d Window::get_mouse_scroll() const { return frame().mouse_scroll; }
-double Window::get_mouse_scroll_x() const { return frame().mouse_scroll.x; }
-double Window::get_mouse_scroll_y() const { return frame().mouse_scroll.y; }
 void Window::set_text_input_mode() { frame().test_input_mode = true; }
 void Window::reset_text_input_mode() { frame().test_input_mode = false; }
 bool Window::get_text_input_mode() const { return frame().test_input_mode; }
@@ -216,11 +227,19 @@ void Window::set_mouse_control_status(MouseControl value)
     }
 }
 
-
-void Window::poll_events() { glfwPollEvents(); }
-
 void Window::reset_released_input() { frame() = InputFrame{}; }
-void Window::next_frame() { state.current_frame = (state.current_frame + 1) % TotalFrameCount; }
+void Window::next_frame()
+{
+    for (auto& key : frame().keyboard_buttons)
+    {
+        // Down Keys get promoted to held after one frame
+        if (key == Input::ButtonState::down) key = Input::ButtonState::held;
+        // Up keys get promoted to none after one frame (eg released)
+        if (key == Input::ButtonState::up) key = Input::ButtonState::none;
+    }
+
+    state.current_frame = (state.current_frame + 1) % TotalFrameCount;
+}
 
 
 void Window::key_event(int key, [[maybe_unused]] int scancode, int action, [[maybe_unused]] int mods)
@@ -228,15 +247,15 @@ void Window::key_event(int key, [[maybe_unused]] int scancode, int action, [[may
     switch (action)
     {
         case GLFW_PRESS:
-            frame().keyboard_buttons[key] = ButtonState::down;
+            frame().keyboard_buttons[key] = Input::ButtonState::down;
             break;
 
         case GLFW_REPEAT:
-            frame().keyboard_buttons[key] = ButtonState::held;
+            frame().keyboard_buttons[key] = Input::ButtonState::repeat;
             break;
 
         case GLFW_RELEASE:
-            frame().keyboard_buttons[key] = ButtonState::up;
+            frame().keyboard_buttons[key] = Input::ButtonState::up;
             break;
 
         default:
@@ -249,15 +268,15 @@ void Window::mouse_button_event(int button, int action, [[maybe_unused]] int mod
     switch (action)
     {
         case GLFW_PRESS:
-            frame().mouse_buttons[button] = ButtonState::down;
+            frame().mouse_buttons[button] = Input::ButtonState::down;
             break;
 
         case GLFW_REPEAT:
-            frame().mouse_buttons[button] = ButtonState::held;
+            assert(false && "No support for repeated mouse events");
             break;
 
         case GLFW_RELEASE:
-            frame().mouse_buttons[button] = ButtonState::up;
+            frame().mouse_buttons[button] = Input::ButtonState::up;
             break;
 
         default:
