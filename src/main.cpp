@@ -1,6 +1,7 @@
 #include "core/glfw.h"
 #include "spdlog/spdlog.h"
 
+#include "render/renderer.h"
 struct StaticInit
 {
     StaticInit() { Window::static_initialization(); }
@@ -13,6 +14,9 @@ int main()
     Window main_win{ Window::CreateDetails{
         .window_title = "TestWindow", .size = math::vec2i{ 800, 600 }, .position = math::vec2i{ 100, 100 } } };
 
+    Renderer renderer{ Renderer::CreateDetails{
+        .app_name = "Test", .enable_validation = true, .window = &main_win } };
+
     while (!main_win.should_close())
     {
         Window::poll_events();
@@ -21,7 +25,8 @@ int main()
         {
             main_win.set_close();
         }
-
+        renderer.update();
+        renderer.draw();
 
         main_win.next_frame();
     }

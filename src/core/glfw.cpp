@@ -211,7 +211,7 @@ Window::MouseControl Window::get_mouse_control_status() const
 void Window::set_mouse_control_status(MouseControl value)
 {
     frame().mouse_control_status = value;
-    spdlog::info("Set mouse control status to {}", value);
+    spdlog::info("Set mouse control status to {}", static_cast<int>(value));
     switch (frame().mouse_control_status)
     {
         default:

@@ -11,6 +11,8 @@ option(EXPECTED_BUILD_PACKAGE OFF)
 
 option(FASTNOISE2_NOISETOOL OFF)
 
+find_package(Vulkan REQUIRED)
+
 include(FetchContent)
 FetchContent_Declare(
     fc_glfw
@@ -18,14 +20,9 @@ FetchContent_Declare(
     GIT_TAG        3.3.2
 )
 FetchContent_Declare(
-        fc_vk_module
-        GIT_REPOSITORY https://github.com/cdgiessen/vk-module
-        GIT_TAG        master
-    )
-FetchContent_Declare(
     fc_vkbootstrap
     GIT_REPOSITORY https://github.com/charles-lunarg/vk-bootstrap
-    GIT_TAG        swapchain
+    GIT_TAG        master
 )
 FetchContent_Declare(
     fc_imgui
@@ -44,8 +41,8 @@ FetchContent_Declare(
 )
 FetchContent_Declare(
     fc_vma
-    GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator
-    GIT_TAG        v2.3.0
+    GIT_REPOSITORY https://github.com/martty/VulkanMemoryAllocator/
+    GIT_TAG        b0c78ced009d8fbe15b2842d78ddb40066d9641b
 )
 FetchContent_Declare(
     fc_nlohmann_json
@@ -58,16 +55,6 @@ FetchContent_Declare(
     GIT_TAG        v1.10
 )
 FetchContent_Declare(
-    fc_entt
-    GIT_REPOSITORY https://github.com/skypjack/entt
-    GIT_TAG        v3.7.1
-)
-FetchContent_Declare(
-    fc_moodycamelqueue
-    GIT_REPOSITORY https://github.com/cameron314/concurrentqueue
-    GIT_TAG        master
-)
-FetchContent_Declare(
     fc_fastnoise2
     GIT_REPOSITORY https://github.com/Auburn/FastNoise2/
     GIT_TAG        master
@@ -77,20 +64,23 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/gabime/spdlog
     GIT_TAG        v1.x
 )
-
+FetchContent_Declare(
+    fc_vuk
+    GIT_REPOSITORY https://github.com/martty/vuk
+    GIT_TAG        v0.3
+)
+set(CMAKE_POLICY_DEFAULT_CMP0079 NEW)
 FetchContent_MakeAvailable(
 fc_glfw
-fc_vk_module
+fc_vma
 fc_vkbootstrap
-fc_optional fc_expected
+fc_optional
+fc_expected
 fc_nlohmann_json
-fc_entt
-fc_moodycamelqueue
 fc_fastnoise2
 fc_spdlog
+fc_vuk
 )
-
-target_link_libraries( vk-bootstrap PUBLIC vulkan-simple-cpp)
 
 FetchContent_GetProperties(fc_imgui)
 if(NOT fc_imgui_POPULATED)
@@ -103,17 +93,6 @@ if(NOT fc_imgui_POPULATED)
     target_include_directories(DearImGui PUBLIC ${fc_imgui_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
-get_target_property(VK_MODULE_HEADER_INCLUDE_DIR vulkan-simple-cpp INCLUDE_DIRECTORIES)
-
-FetchContent_GetProperties(fc_vma)
-if(NOT fc_vma_POPULATED)
-    FetchContent_Populate(fc_vma)
-    add_library(VulkanMemoryAllocator INTERFACE)
-
-    target_include_directories(VulkanMemoryAllocator INTERFACE ${fc_vma_SOURCE_DIR}/include ${VK_MODULE_HEADER_INCLUDE_DIR})
-    target_compile_definitions(VulkanMemoryAllocator INTERFACE VMA_DYNAMIC_VULKAN_FUNCTIONS=false)
-endif()
-
 FetchContent_GetProperties(fc_cgltf)
 if(NOT fc_cgltf_POPULATED)
     FetchContent_Populate(fc_cgltf)
@@ -123,17 +102,18 @@ endif()
 
 add_library(external_dependencies INTERFACE)
 target_link_libraries(external_dependencies INTERFACE
+    Vulkan::Vulkan
     glfw
-    vulkan-simple-cpp
     vk-bootstrap
     DearImGui
-    tl::optional tl::expected
+    tl::optional
+    tl::expected
     nlohmann_json::nlohmann_json
     cgltf
-    EnTT::EnTT
-    concurrentqueue
     FastNoise
     spdlog::spdlog
+    VulkanMemoryAllocator
+    vuk
     )
 
 
