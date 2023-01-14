@@ -41,6 +41,7 @@ const char* to_string(SwapchainManagerError err)
 {
     switch (err)
     {
+        CASE_TO_STRING(SwapchainManagerError, success)
         CASE_TO_STRING(SwapchainManagerError, swapchain_suboptimal)
         CASE_TO_STRING(SwapchainManagerError, swapchain_out_of_date)
         CASE_TO_STRING(SwapchainManagerError, surface_lost)
@@ -148,7 +149,7 @@ DeletionQueue ::DeletionQueue(Device const& device, uint32_t deletion_delay) noe
 DeletionQueue::DeletionQueue(VkDevice device, uint32_t queue_depth) noexcept
 : device(device), queue_depth(queue_depth)
 {
-    assert(queue_depth <= detail::MAX_SWAPCHAIN_IMAGE_COUNT &&
+    assert(queue_depth <= MAX_SWAPCHAIN_IMAGE_COUNT &&
            "queue_depth cannot exceed the max swapchain image count (8)");
     for (uint32_t i = 0; i < queue_depth; i++)
     {
@@ -250,9 +251,6 @@ void DeletionQueue::destroy() noexcept
     }
 }
 
-namespace detail
-{
-
 // Swapchain Synchronization resources (semaphores, fences, & tracking)
 SemaphoreManager::SemaphoreManager(VkDevice device, uint32_t image_count) noexcept : device(device)
 {
@@ -353,7 +351,7 @@ void SemaphoreManager::recreate_swapchain_resources() noexcept
     }
     detail.expired_semaphores[detail.current_submit_index].push_back(detail.current_acquire_semaphore);
     detail.current_acquire_semaphore = get_fresh_semaphore();
-    detail.current_swapchain_index = detail::INDEX_MAX_VALUE;
+    detail.current_swapchain_index = INDEX_MAX_VALUE;
 }
 
 VkSemaphore SemaphoreManager::get_fresh_semaphore() noexcept
@@ -395,14 +393,12 @@ Result<vkb::SwapchainManager> convert(Result<vkb::Swapchain> err)
     }
 }
 
-} // namespace detail
-
-detail::Result<SwapchainManager> SwapchainManager::create(Device const& device, SwapchainBuilder const& builder) noexcept
+Result<SwapchainManager> SwapchainManager::create(Device const& device, SwapchainBuilder const& builder) noexcept
 {
     auto swapchain_ret = builder.build();
     if (!swapchain_ret.has_value())
     {
-        return detail::convert(swapchain_ret);
+        return convert(swapchain_ret);
     }
 
     auto swapchain_resources_ret = SwapchainManager::create_swapchain_resources(swapchain_ret.value());
@@ -419,7 +415,7 @@ SwapchainManager::SwapchainManager(
   detail({ builder,
       swapchain,
       resources,
-      detail::SemaphoreManager(device, swapchain.image_count),
+      SemaphoreManager(device, swapchain.image_count),
       DeletionQueue(device, swapchain.image_count) })
 {
 
@@ -432,7 +428,7 @@ void SwapchainManager::destroy() noexcept
 {
     if (device != VK_NULL_HANDLE)
     {
-        detail.semaphore_manager = detail::SemaphoreManager{};
+        detail.semaphore_manager = SemaphoreManager{};
         detail.delete_queue.add_swapchain(detail.swapchain_resources.swapchain);
         detail.delete_queue.add_image_views(
             detail.current_swapchain.image_count, &detail.swapchain_resources.image_views.front());
@@ -461,7 +457,7 @@ SwapchainBuilder& SwapchainManager::get_builder() noexcept
     assert(detail.current_status != Status::destroyed && "SwapchainManager was destroyed!");
     return detail.builder;
 }
-detail::Result<SwapchainInfo> SwapchainManager::get_info() noexcept
+Result<SwapchainInfo> SwapchainManager::get_info() noexcept
 {
     assert(detail.current_status != Status::destroyed && "SwapchainManager was destroyed!");
     if (detail.current_status == Status::expired)
@@ -470,7 +466,7 @@ detail::Result<SwapchainInfo> SwapchainManager::get_info() noexcept
     }
     return detail.current_info;
 }
-detail::Result<SwapchainResources> SwapchainManager::get_swapchain_resources() noexcept
+Result<SwapchainResources> SwapchainManager::get_swapchain_resources() noexcept
 {
     assert(detail.current_status != Status::destroyed && "SwapchainManager was destroyed!");
     if (detail.current_status == Status::expired)
@@ -480,7 +476,7 @@ detail::Result<SwapchainResources> SwapchainManager::get_swapchain_resources() n
     return detail.swapchain_resources;
 }
 
-detail::Result<SwapchainAcquireInfo> SwapchainManager::acquire_image() noexcept
+Result<SwapchainAcquireInfo> SwapchainManager::acquire_image() noexcept
 {
     assert(detail.current_status != Status::destroyed && "SwapchainManager was destroyed!");
     if (detail.current_status == Status::expired)
@@ -499,7 +495,7 @@ detail::Result<SwapchainAcquireInfo> SwapchainManager::acquire_image() noexcept
     }
 
     // reset the current image index in case acquiring fails
-    detail.current_image_index = detail::INDEX_MAX_VALUE;
+    detail.current_image_index = INDEX_MAX_VALUE;
 
     VkSemaphore acquire_semaphore = detail.semaphore_manager.get_next_acquire_semaphore();
 
@@ -536,7 +532,7 @@ detail::Result<SwapchainAcquireInfo> SwapchainManager::acquire_image() noexcept
     return out;
 }
 
-detail::Result<detail::void_t> SwapchainManager::present() noexcept
+Result<detail::E> SwapchainManager::present() noexcept
 {
     assert(detail.current_status != Status::destroyed && "SwapchainManager was destroyed!");
     if (detail.current_status == Status::expired)
@@ -584,7 +580,7 @@ detail::Result<detail::void_t> SwapchainManager::present() noexcept
     // clean up old swapchain resources
     detail.delete_queue.tick();
 
-    return detail::void_t{};
+    return detail::E{};
 }
 
 void SwapchainManager::cancel_acquire_frame() noexcept
@@ -598,7 +594,7 @@ void SwapchainManager::cancel_present_frame() noexcept
     detail.current_status = Status::ready_to_acquire;
 }
 
-detail::Result<SwapchainInfo> SwapchainManager::recreate(uint32_t width, uint32_t height) noexcept
+Result<SwapchainInfo> SwapchainManager::recreate(uint32_t width, uint32_t height) noexcept
 {
     assert(detail.current_status != Status::destroyed && "SwapchainManager was destroyed!");
 
@@ -633,13 +629,13 @@ void SwapchainManager::update_swapchain_info() noexcept
     detail.current_info.image_usage_flags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 }
 
-detail::Result<SwapchainResources> SwapchainManager::create_swapchain_resources(vkb::Swapchain swapchain) noexcept
+Result<SwapchainResources> SwapchainManager::create_swapchain_resources(vkb::Swapchain swapchain) noexcept
 {
 
     SwapchainResources out{};
     out.swapchain = swapchain.swapchain;
     out.image_count = swapchain.image_count;
-    assert(out.image_count <= detail::MAX_SWAPCHAIN_IMAGE_COUNT);
+    assert(out.image_count <= MAX_SWAPCHAIN_IMAGE_COUNT);
 
     VkResult result = vkGetSwapchainImagesKHR(swapchain.device, swapchain.swapchain, &out.image_count, nullptr);
     if (result != VK_SUCCESS)

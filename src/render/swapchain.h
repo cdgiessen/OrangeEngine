@@ -9,6 +9,7 @@ namespace vkb
 
 enum class SwapchainManagerError
 {
+    success,
     swapchain_suboptimal,
     swapchain_out_of_date,
     surface_lost,
@@ -24,13 +25,9 @@ enum class SwapchainManagerError
 std::error_code make_error_code(SwapchainManagerError swapchain_error);
 const char* to_string(SwapchainManagerError err);
 
-namespace detail
-{
 const uint32_t INDEX_MAX_VALUE = 65536;
 const int FRAMES_IN_FLIGHT = 2;
 const int MAX_SWAPCHAIN_IMAGE_COUNT = 8;
-
-} // namespace detail
 
 // ImagelessFramebufferBuilder
 
@@ -120,7 +117,7 @@ class DeletionQueue
     VkDevice device;
     uint32_t queue_depth = 0;
     uint32_t current_index = 0;
-    std::array<DelaySets, detail::MAX_SWAPCHAIN_IMAGE_COUNT> sets;
+    std::array<DelaySets, MAX_SWAPCHAIN_IMAGE_COUNT> sets;
 
     void clear_set(vkb::DeletionQueue::DelaySets& set) noexcept;
 };
@@ -131,8 +128,6 @@ class DeletionQueue
  * write to swapchain images, and the synchronization of the writing and presenting.
  * */
 
-namespace detail
-{
 class SemaphoreManager
 {
     public:
@@ -156,12 +151,12 @@ class SemaphoreManager
     struct Details
     {
         uint32_t swapchain_image_count = 0;
-        uint32_t current_swapchain_index = detail::INDEX_MAX_VALUE;
-        std::array<bool, detail::MAX_SWAPCHAIN_IMAGE_COUNT> in_use = {};
-        std::array<VkSemaphore, detail::MAX_SWAPCHAIN_IMAGE_COUNT> active_acquire_semaphores{};
-        std::array<VkSemaphore, detail::MAX_SWAPCHAIN_IMAGE_COUNT> active_submit_semaphores{};
+        uint32_t current_swapchain_index = INDEX_MAX_VALUE;
+        std::array<bool, MAX_SWAPCHAIN_IMAGE_COUNT> in_use = {};
+        std::array<VkSemaphore, MAX_SWAPCHAIN_IMAGE_COUNT> active_acquire_semaphores{};
+        std::array<VkSemaphore, MAX_SWAPCHAIN_IMAGE_COUNT> active_submit_semaphores{};
         uint32_t current_submit_index = 0;
-        std::array<std::vector<VkSemaphore>, detail::FRAMES_IN_FLIGHT> expired_semaphores;
+        std::array<std::vector<VkSemaphore>, FRAMES_IN_FLIGHT> expired_semaphores;
         std::vector<VkSemaphore> idle_semaphores;
         VkSemaphore current_acquire_semaphore = VK_NULL_HANDLE;
     } detail;
@@ -169,13 +164,6 @@ class SemaphoreManager
 
     VkSemaphore get_fresh_semaphore() noexcept;
 };
-
-// Used to signal that there may be an error that must be checked but there is no value returned
-struct void_t
-{
-};
-
-} // namespace detail
 
 // Descriptive information about the current swapchain.
 // Contains: image count, image format, extent (width & height), image usage flags
@@ -195,8 +183,8 @@ struct SwapchainResources
 {
     VkSwapchainKHR swapchain = VK_NULL_HANDLE;
     uint32_t image_count = 0;
-    std::array<VkImage, detail::MAX_SWAPCHAIN_IMAGE_COUNT> images{};
-    std::array<VkImageView, detail::MAX_SWAPCHAIN_IMAGE_COUNT> image_views{};
+    std::array<VkImage, MAX_SWAPCHAIN_IMAGE_COUNT> images{};
+    std::array<VkImageView, MAX_SWAPCHAIN_IMAGE_COUNT> image_views{};
 };
 
 // Struct returned from SwapchainManager::acquire_image()
@@ -205,7 +193,7 @@ struct SwapchainAcquireInfo
     // image view to use this frame
     VkImageView image_view{};
     // index of the swapchain image to use this frame
-    uint32_t image_index = detail::INDEX_MAX_VALUE;
+    uint32_t image_index = INDEX_MAX_VALUE;
     VkSemaphore signal_semaphore;
     VkSemaphore wait_semaphore;
 };
@@ -308,13 +296,21 @@ struct SwapchainAcquireInfo
  * needs to be involved with. However, it is possible to add additional wait and signal semaphores
  * in the call to vkQueueSubmit if so desired by passing in the semaphores into `submit`.
  **/
+
+namespace detail
+{
+struct E
+{
+};
+} // namespace detail
+
 class SwapchainManager
 {
     public:
     explicit SwapchainManager(
         Device const& device, SwapchainBuilder const& builder, Swapchain swapchain, SwapchainResources resources) noexcept;
 
-    static detail::Result<SwapchainManager> create(Device const& device, SwapchainBuilder const& builder) noexcept;
+    static Result<SwapchainManager> create(Device const& device, SwapchainBuilder const& builder) noexcept;
 
     explicit SwapchainManager() = default;
     ~SwapchainManager() noexcept;
@@ -328,26 +324,26 @@ class SwapchainManager
     // Primary API
 
     // Get a VkImageView handle to use in rendering
-    detail::Result<SwapchainAcquireInfo> acquire_image() noexcept;
+    Result<SwapchainAcquireInfo> acquire_image() noexcept;
 
     void cancel_acquire_frame() noexcept;
     void cancel_present_frame() noexcept;
 
-    detail::Result<detail::void_t> present() noexcept;
+    Result<detail::E> present() noexcept;
 
     // Recreate the swapchain, putting currently in-use internal resources in a delete queue
-    detail::Result<SwapchainInfo> recreate(uint32_t width = 0, uint32_t height = 0) noexcept;
+    Result<SwapchainInfo> recreate(uint32_t width = 0, uint32_t height = 0) noexcept;
 
     // Get info about the swapchain
-    detail::Result<SwapchainInfo> get_info() noexcept;
+    Result<SwapchainInfo> get_info() noexcept;
 
     // Get access to the swapchain and resources associated with it
-    detail::Result<SwapchainResources> get_swapchain_resources() noexcept;
+    Result<SwapchainResources> get_swapchain_resources() noexcept;
 
     // Access the internal builder. This is how an application can alter how the swapchain is recreated.
     SwapchainBuilder& get_builder() noexcept;
 
-    static detail::Result<SwapchainResources> create_swapchain_resources(vkb::Swapchain swapchain) noexcept;
+    static Result<SwapchainResources> create_swapchain_resources(vkb::Swapchain swapchain) noexcept;
 
     private:
     enum class Status
@@ -363,13 +359,13 @@ class SwapchainManager
         vkb::SwapchainBuilder builder;
         vkb::Swapchain current_swapchain;
         SwapchainResources swapchain_resources;
-        detail::SemaphoreManager semaphore_manager;
+        SemaphoreManager semaphore_manager;
         DeletionQueue delete_queue;
         Status current_status = Status::ready_to_acquire;
         VkQueue graphics_queue{};
         VkQueue present_queue{};
         SwapchainInfo current_info{};
-        uint32_t current_image_index = detail::INDEX_MAX_VALUE;
+        uint32_t current_image_index = INDEX_MAX_VALUE;
     } detail;
 
     void update_swapchain_info() noexcept;

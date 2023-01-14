@@ -39,7 +39,7 @@ Renderer::Renderer(Renderer::CreateDetails create_details)
     auto inst_ret = inst_builder.set_app_name(create_details.app_name)
                         .set_engine_name(create_details.engine_name)
                         .enable_validation_layers(create_details.enable_validation)
-                        .desire_api_version(1, 2)
+                        .require_api_version(1, 2)
                         .set_debug_callback(vulkan_debug_callback)
                         .build();
     if (!inst_ret)

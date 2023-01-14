@@ -1,0 +1,17 @@
+{
+    "name": "fastnoise2",
+    "description": "Modular node graph based noise generation library using SIMD, C++17 and templates",
+    "homepage": "https://github.com/Auburn/FastNoise2",
+    "license": "MIT",
+    "version-string": "0.9.7-alpha",
+    "dependencies": [
+        {
+            "name": "vcpkg-cmake",
+            "host": true
+        },
+        {
+            "name": "vcpkg-cmake-config",
+            "host": true
+        }
+    ]
+}

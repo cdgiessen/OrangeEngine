@@ -6,7 +6,7 @@
 #include "VkBootstrap.h"
 #include "core/glfw.h"
 #include "swapchain.h"
-#include "vuk/vuk_fwd.hpp"
+#include "vuk/Context.hpp"
 
 class Renderer
 {
@@ -43,7 +43,7 @@ class Renderer
     vkb::SwapchainInfo swap_info;
     vkb::DeletionQueue delete_queue;
 
-    std::optional<vuk::Context> context;
+    tl::optional<vuk::Context> context;
 
     static const int frames_in_flight = 2;
     uint32_t current_index = 0;

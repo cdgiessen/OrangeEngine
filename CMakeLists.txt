@@ -1,21 +1,35 @@
 cmake_minimum_required(VERSION 3.15)
-project(OrangeEngine LANGUAGES CXX)
-
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+
+project(OrangeEngine LANGUAGES CXX)
+
+option(ORANGE_ENGINE_BUILD_TESTS "Build tests" OFF)
+
+# Use FetchContent to get vcpkg, so users don't have to get it themselves
+include(FetchContent)
+FetchContent_Declare(vcpkg
+    GIT_REPOSITORY https://github.com/microsoft/vcpkg.git
+    GIT_TAG 2022.11.14
+)
+FetchContent_MakeAvailable(vcpkg)
+
+set(VCPKG_INSTALL_OPTIONS "--no-print-usage")
+set(VCPKG_OVERLAY_PORTS ${CMAKE_CURRENT_SOURCE_DIR}/ports)
+include("${vcpkg_SOURCE_DIR}/scripts/buildsystems/vcpkg.cmake")
+
+add_subdirectory(ext)
 
 include("cmake/StandardProjectSettings.cmake")
 include("CMakeDependentOption")
 include("cmake/compiler.cmake")
 
-add_subdirectory(ext)
 
-option(ORANGE_ENGINE_BUILD_TESTS "Build tests" ON)
 
 add_library(project_dependencies INTERFACE)
 target_link_libraries(project_dependencies INTERFACE external_dependencies)
 add_subdirectory(src)
 
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND ORANGE_ENGINE_BUILD_TESTS)
+if(ORANGE_ENGINE_BUILD_TESTS)
     add_subdirectory(test)
 endif()
