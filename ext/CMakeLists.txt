@@ -11,13 +11,8 @@ find_package(unofficial-vulkan-memory-allocator REQUIRED)
 
 find_package(vk-bootstrap REQUIRED)
 find_package(FastNoise2 REQUIRED)
+find_package(vuk CONFIG REQUIRED)
 
-FetchContent_Declare(
-    vuk
-    GIT_REPOSITORY https://github.com/martty/vuk
-    GIT_TAG        be7cf2cab527df1310bfe39a65d72c524fdd2657
-)
-FetchContent_MakeAvailable(vuk)
 add_library(external_dependencies INTERFACE)
 target_link_libraries(external_dependencies INTERFACE
     Vulkan::Vulkan
@@ -30,7 +25,7 @@ target_link_libraries(external_dependencies INTERFACE
     unofficial::vulkan-memory-allocator::vulkan-memory-allocator
     vk-bootstrap::vk-bootstrap
     FastNoise2::FastNoise
-    vuk
+    vuk::vuk
     )
 target_include_directories(external_dependencies INTERFACE ${CGLTF_INCLUDE_DIRS})
 

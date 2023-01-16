@@ -12,3 +12,5 @@ vcpkg_cmake_configure(
         -DFASTNOISE2_NOISETOOL=OFF
 )
 vcpkg_cmake_install()
+
+file(INSTALL "${SOURCE_PATH}/LICENSE" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME "copyright")

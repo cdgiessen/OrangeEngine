@@ -1,0 +1,63 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index eb1e124..d3c3507 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -32,3 +32,20 @@ message(STATUS "VMA_DEBUG_GLOBAL_MUTEX = ${VMA_DEBUG_GLOBAL_MUTEX}")
+ message(STATUS "VMA_DEBUG_DONT_EXCEED_MAX_MEMORY_ALLOCATION_COUNT = ${VMA_DEBUG_DONT_EXCEED_MAX_MEMORY_ALLOCATION_COUNT}")
+ 
+ add_subdirectory(src)
++
++include(GNUInstallDirs)
++
++# Install library target and add it and any dependencies to export set.
++install(TARGETS VulkanMemoryAllocator
++    EXPORT vuk-vma-config
++    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
++    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
++)
++
++install(EXPORT vuk-vma-config DESTINATION ${CMAKE_INSTALL_DATADIR}/vuk-vma FILE vuk-vma-config.cmake)
++
++# Install Headers
++install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/vk_mem_alloc.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
++    RENAME vuk_vk_mem_alloc.h)
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index eccf82e..7fbd7dc 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -2,7 +2,7 @@ set(VMA_LIBRARY_SOURCE_FILES
+     VmaUsage.cpp
+ )
+ 
+-add_library(VulkanMemoryAllocator ${VMA_LIBRARY_SOURCE_FILES})
++add_library(VulkanMemoryAllocator STATIC ${VMA_LIBRARY_SOURCE_FILES})
+ 
+ set_target_properties(
+     VulkanMemoryAllocator PROPERTIES
+@@ -13,7 +13,10 @@ set_target_properties(
+     CXX_STANDARD_REQUIRED ON
+ )
+ 
+-target_include_directories(VulkanMemoryAllocator PUBLIC ${PROJECT_SOURCE_DIR}/include)
++target_include_directories(VulkanMemoryAllocator PUBLIC
++  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
++  $<INSTALL_INTERFACE:include>
++)
+ 
+ # Only link to Vulkan if static linking is used
+ if (NOT ${VMA_DYNAMIC_VULKAN_FUNCTIONS})
+@@ -48,10 +51,10 @@ if (VMA_BUILD_SAMPLE)
+         if(${CMAKE_GENERATOR} MATCHES "Visual Studio.*")
+             # Use Unicode instead of multibyte set
+             add_compile_definitions(UNICODE _UNICODE)
+-            
++
+             # Set VmaSample as startup project
+             set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "VmaSample")
+-            
++
+             # Enable multithreaded compiling
+             target_compile_options(VmaSample PRIVATE "/MP")
+ 

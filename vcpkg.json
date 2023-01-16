@@ -13,6 +13,7 @@
         "vulkan-memory-allocator",
         "fastnoise2",
         "catch2",
-        "vk-bootstrap"
+        "vk-bootstrap",
+        "vuk"
     ]
 }
