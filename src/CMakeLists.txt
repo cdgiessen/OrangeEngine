@@ -6,6 +6,6 @@ add_subdirectory(render)
 
 
 add_executable(main main.cpp)
-target_link_libraries(main PUBLIC project_dependencies
-    orange_math orange_core orange_renderer)
+target_link_libraries(main PRIVATE external_dependencies
+    PUBLIC orange_math orange_core orange_renderer)
 set_target_properties(main PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

@@ -24,10 +24,6 @@ include("cmake/StandardProjectSettings.cmake")
 include("CMakeDependentOption")
 include("cmake/compiler.cmake")
 
-
-
-add_library(project_dependencies INTERFACE)
-target_link_libraries(project_dependencies INTERFACE external_dependencies)
 add_subdirectory(src)
 
 if(ORANGE_ENGINE_BUILD_TESTS)
