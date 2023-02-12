@@ -9,9 +9,18 @@ find_path(CGLTF_INCLUDE_DIRS "cgltf.h")
 find_package(spdlog REQUIRED GLOBAL)
 find_package(unofficial-vulkan-memory-allocator REQUIRED GLOBAL)
 
-find_package(vk-bootstrap REQUIRED)
-find_package(FastNoise2 REQUIRED)
-find_package(vuk CONFIG REQUIRED)
+find_package(vk-bootstrap REQUIRED GLOBAL)
+find_package(FastNoise2 REQUIRED GLOBAL)
+
+# needed for VUK
+find_package(unofficial-concurrentqueue CONFIG REQUIRED GLOBAL)
+find_package(doctest CONFIG REQUIRED GLOBAL)
+find_package(fmt CONFIG REQUIRED GLOBAL)
+find_package(imgui CONFIG REQUIRED GLOBAL)
+find_package(robin_hood CONFIG REQUIRED GLOBAL)
+find_package(spirv_cross_core REQUIRED GLOBAL)
+
+find_package(vuk CONFIG REQUIRED GLOBAL)
 
 add_library(external_dependencies INTERFACE)
 target_link_libraries(external_dependencies INTERFACE
@@ -31,7 +40,5 @@ target_include_directories(external_dependencies INTERFACE ${CGLTF_INCLUDE_DIRS}
 
 
 if (ORANGE_ENGINE_BUILD_TESTS)
-    find_package(Catch2 3 REQUIRED)
-    add_library(external_test_dependencies INTERFACE)
-    target_link_libraries(external_test_dependencies INTERFACE Catch2::Catch2 Catch2::Catch2WithMain)
+    find_package(Catch2 3 REQUIRED GLOBAL)
 endif()

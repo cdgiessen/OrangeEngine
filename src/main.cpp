@@ -1,3 +1,9 @@
+
+// Add our header only library definitions here
+// Necessary to make VUK work currently
+#define VMA_IMPLEMENTATION
+#include <vk_mem_alloc.h>
+
 #include "core/glfw.h"
 #include "spdlog/spdlog.h"
 
